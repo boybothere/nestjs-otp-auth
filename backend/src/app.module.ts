@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { OtpModule } from './otp/otp.module';
 import { OTP } from './otp/entities/otp.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [EmailModule, ConfigModule.forRoot({
@@ -28,7 +29,8 @@ import { OTP } from './otp/entities/otp.entity';
       inject: [ConfigService]
     }),
     UserModule,
-    OtpModule
+    OtpModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

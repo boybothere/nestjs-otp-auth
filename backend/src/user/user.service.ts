@@ -45,4 +45,12 @@ export class UserService {
 
         return await this.emailService.sendEmail(emailDto)
     }
+
+    async validateEmail(email: string): Promise<User> {
+        const user = await this.userRepository.findOne({
+            where: { email }
+        })
+        if (!user) throw new BadRequestException('Email does not exist!')
+        return user;
+    }
 }

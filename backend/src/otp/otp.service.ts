@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OTP } from './entities/otp.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { OTPType } from './types/OTP.type';
@@ -18,6 +18,15 @@ export class OtpService {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000);
 
+        const existingOtp = await this.OTPRepository.findOne({
+            where: { user: { id: user.id }, type }
+        })
+
+        if (existingOtp) {
+            existingOtp.token = hashedOTP
+            existingOtp.expiresAt = expiresAt
+            await this.OTPRepository.save(existingOtp)
+        }
         const newOtp = this.OTPRepository.create({
             user,
             token: hashedOTP,
@@ -26,5 +35,19 @@ export class OtpService {
         })
         await this.OTPRepository.save(newOtp)
         return otp
+    }
+
+    async validateOTP(userId: number, otp: string): Promise<boolean> {
+        const validateToken = await this.OTPRepository.findOne({
+            where: {
+                user: { id: userId },
+                expiresAt: MoreThan(new Date())
+            }
+        })
+        if (!validateToken) throw new BadGatewayException('Your OTP has expired, please request a new one!');
+
+        const tokenMatch = await bcrypt.compare(otp, validateToken.token);
+        if (!tokenMatch) throw new BadRequestException('Please enter correct OTP!')
+        return true;
     }
 }
