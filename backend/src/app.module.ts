@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
+import { OtpModule } from './otp/otp.module';
+import { OTP } from './otp/entities/otp.entity';
 
 @Module({
   imports: [EmailModule, ConfigModule.forRoot({
@@ -20,12 +22,13 @@ import { User } from './user/entities/user.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        entities: [User],
+        entities: [User, OTP],
         synchronize: true
       }),
       inject: [ConfigService]
     }),
-    UserModule
+    UserModule,
+    OtpModule
   ],
   controllers: [AppController],
   providers: [AppService],

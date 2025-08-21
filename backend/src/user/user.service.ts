@@ -4,12 +4,19 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
+import { OtpService } from 'src/otp/otp.service';
+import { OTPType } from 'src/otp/types/OTP.type';;
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class UserService {
-    constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
+    constructor(
+        @InjectRepository(User) private readonly userRepository: Repository<User>,
+        private readonly OTPService: OtpService,
+        private readonly emailService: EmailService
+    ) { }
 
-    async registerUser(createUserDto: CreateUserDto): Promise<User> {
+    async registerUser(createUserDto: CreateUserDto): Promise<void> {
         const { email, password } = createUserDto;
         const findUser = await this.userRepository.findOne({
             where: { email }
@@ -22,6 +29,20 @@ export class UserService {
             email,
             password: hashedPassword
         })
-        return await this.userRepository.save(newUser)
+        await this.userRepository.save(newUser)
+        return this.emailVerification(newUser, OTPType.OTP)
+    }
+
+    async emailVerification(user: User, type: OTPType) {
+        const otp = await this.OTPService.generateOTP(user, type)
+        const emailDto = {
+            recipients: [user.email],
+            subject: "OTP for verification",
+            html: `Your OTP is <strong>${otp}</strong>.
+            <br /> Use this to log into your account and do not share it!
+            <br />If you did not request this, you can ignore this email`
+        }
+
+        return await this.emailService.sendEmail(emailDto)
     }
 }
