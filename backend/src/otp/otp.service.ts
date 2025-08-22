@@ -27,13 +27,16 @@ export class OtpService {
             existingOtp.expiresAt = expiresAt
             await this.OTPRepository.save(existingOtp)
         }
-        const newOtp = this.OTPRepository.create({
-            user,
-            token: hashedOTP,
-            type,
-            expiresAt
-        })
-        await this.OTPRepository.save(newOtp)
+
+        if (!existingOtp) {
+            const newOtp = this.OTPRepository.create({
+                user,
+                token: hashedOTP,
+                type,
+                expiresAt
+            })
+            await this.OTPRepository.save(newOtp)
+        }
         return otp
     }
 
