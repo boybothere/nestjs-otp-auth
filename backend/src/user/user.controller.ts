@@ -13,7 +13,7 @@ export class UserController {
     @Post('register')
     async registerUser(@Body() createUserDto: CreateUserDto) {
         await this.userService.registerUser(createUserDto)
-        return { message: "User Registered successfully and email sent to registered email!" }
+        return { message: "User Registered successfully, please proceed to the login page!" }
     }
 
     @Post('request-otp')

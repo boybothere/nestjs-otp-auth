@@ -32,7 +32,6 @@ export class UserService {
             password: hashedPassword
         })
         await this.userRepository.save(newUser)
-        return this.emailVerification(newUser, OTPType.OTP)
     }
 
     async emailVerification(user: User, type: OTPType) {

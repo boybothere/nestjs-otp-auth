@@ -10,7 +10,7 @@ export class LoginDto {
     @IsString()
     password: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsNumber()
-    otp?: string;
+    otp: string;
 }
