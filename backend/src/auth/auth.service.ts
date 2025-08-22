@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { OtpService } from 'src/otp/otp.service';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -60,5 +61,16 @@ export class AuthService {
 
         user.accountStatus = 'verified';
         return await this.userRepository.save(user);
+    }
+
+    async resetPassword(resetPasswordDto: ResetPasswordDto) {
+        const userId = await this.otpService.validateResetPassword(resetPasswordDto.token)
+        const user = await this.userRepository.findOne({
+            where: { id: userId }
+        })
+        if (!user) throw new NotFoundException('User not found!')
+        user.password = await bcrypt.hash(resetPasswordDto.newPassword, 10);
+        await this.userRepository.save(user)
+        return 'Password reset successfully!'
     }
 }

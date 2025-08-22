@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, NotFoundException, Post } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
 import { RequestTokenDto } from './dto/request-token.dto';
@@ -24,6 +24,16 @@ export class UserController {
         return {
             message: 'OTP sent successfully! Please check mail!'
         }
+    }
+
+    @Post('forgot-password')
+    async forgotPassword(@Body() forgotPasswordDto: RequestTokenDto) {
+        const { email } = forgotPasswordDto;
+        const user = await this.userService.validateEmail(email);
+        if (!user) throw new NotFoundException('User email not found!');
+
+        await this.userService.emailVerification(user, OTPType.RESET_LINK);
+        return { message: "Password reset link has been sent, please check your mail" }
     }
 
 }

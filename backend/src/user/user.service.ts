@@ -7,13 +7,15 @@ import * as bcrypt from 'bcryptjs';
 import { OtpService } from 'src/otp/otp.service';
 import { OTPType } from 'src/otp/types/OTP.type';;
 import { EmailService } from 'src/email/email.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User) private readonly userRepository: Repository<User>,
         private readonly OTPService: OtpService,
-        private readonly emailService: EmailService
+        private readonly emailService: EmailService,
+        private readonly configService: ConfigService
     ) { }
 
     async registerUser(createUserDto: CreateUserDto): Promise<void> {
@@ -34,16 +36,26 @@ export class UserService {
     }
 
     async emailVerification(user: User, type: OTPType) {
-        const otp = await this.OTPService.generateOTP(user, type)
-        const emailDto = {
-            recipients: [user.email],
-            subject: "OTP for verification",
-            html: `Your OTP is <strong>${otp}</strong>.
+        const token = await this.OTPService.generateToken(user, type)
+        if (type === OTPType.OTP) {
+            const emailDto = {
+                recipients: [user.email],
+                subject: "OTP for verification",
+                html: `Your OTP is <strong>${token}</strong>.
             <br /> Use this to log into your account and do not share it!
             <br />If you did not request this, you can ignore this email`
+            }
+            return await this.emailService.sendEmail(emailDto)
+        } else if (type === OTPType.RESET_LINK) {
+            const reset_link = `${this.configService.get<string>('RESET_PASSWORD_URL')}?token=${token}`
+            const emailDto = {
+                recipients: [user.email],
+                subject: "Password Reset Link",
+                html: `Click the link to reset your password: <p><a href="${reset_link}">Reset Password</p>`
+            }
+            return await this.emailService.sendEmail(emailDto)
         }
 
-        return await this.emailService.sendEmail(emailDto)
     }
 
     async validateEmail(email: string): Promise<User> {
