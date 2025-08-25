@@ -71,6 +71,6 @@ export class AuthService {
         if (!user) throw new NotFoundException('User not found!')
         user.password = await bcrypt.hash(resetPasswordDto.newPassword, 10);
         await this.userRepository.save(user)
-        return 'Password reset successfully!'
+        return { message: 'Password reset successfully!' }
     }
 }
