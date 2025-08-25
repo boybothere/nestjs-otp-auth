@@ -129,12 +129,14 @@ const LoginPage = () => {
                     {isLoading ? 'Logging In...' : 'Login'}
                 </button>
             </form>
-            <p className="text-center text-gray-500 text-sm mt-4">
-                Don't have an account?{' '}
+            <div className="text-center text-gray-500 text-sm mt-4 flex justify-between">
+                <Link to="/forgot-password" className="text-blue-600 hover:underline">
+                    Forgot Password?
+                </Link>
                 <Link to="/register" className="text-blue-600 hover:underline">
                     Register here
                 </Link>
-            </p>
+            </div>
         </div>
     );
 };
